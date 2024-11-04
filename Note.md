@@ -100,3 +100,21 @@ public int hashCode() {
 **hashCode Method:** This method returns a hash code value for the object based on the id field. It uses the Objects.hash method to generate the hash code.
 
 By overriding these methods, you ensure that two User objects with the same id are considered equal, which is crucial for the filter method to work correctly in your TodoController.
+
+
+The warning message indicates that serializing PageImpl instances directly is not supported and suggests using Spring Data's PagedModel or PagedResourcesAssembler for a stable JSON structure.  To resolve this, you can use PagedResourcesAssembler to convert Page<Todo> to PagedModel<Todo>. Here is how you can do it:  
+Add Spring HATEOAS dependency: Ensure you have the Spring HATEOAS dependency in your pom.xml.  
+Update Controller: Use PagedResourcesAssembler in your TodoController.
+```
+if (completed.isPresent() && priority.isPresent()) {
+            todos = todoRepository.findAllByUserAndCompletedAndPriority(user, completed.get(), priority.get(), pageable);
+        } else if (completed.isPresent()) {
+            todos = todoRepository.findAllByUserAndCompleted(user, completed.get(), pageable);
+        } else if (priority.isPresent()) {
+            todos = todoRepository.findAllByUserAndPriority(user, priority.get(), pageable);
+        } else {
+            todos = todoRepository.findAllByUser(user, pageable);
+        }
+        return pagedResourcesAssembler.toModel(todos);
+```
+

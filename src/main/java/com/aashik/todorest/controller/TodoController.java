@@ -11,11 +11,15 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.web.PagedResourcesAssembler;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +30,18 @@ import java.util.Optional;
 public class TodoController {
 
     private final TodoRepository todoRepository;
+    private final PagedResourcesAssembler<Todo> pagedResourcesAssembler;
+
+    @GetMapping("/todos/search")
+    public PagedModel<EntityModel<Todo>> searchTodos(@RequestParam String keyword,
+                                                     @RequestParam Optional<Priority> priority,
+                                                     @RequestParam(defaultValue = "0") int page,
+                                                     @RequestParam(defaultValue = "10") int size) {
+        User user = getAuthenticateUser();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Todo> todos = todoRepository.searchTodos(user, keyword, priority.orElse(null), pageable);
+        return pagedResourcesAssembler.toModel(todos);
+    }
 
     private User getAuthenticateUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -38,18 +54,23 @@ public class TodoController {
 
     // Sort using priority and completed
     @GetMapping("/todos")
-    public List<Todo> getTodos(@RequestParam Optional<Boolean> completed,
-                               @RequestParam Optional<Priority> priority) {
+    public PagedModel<EntityModel<Todo>> getTodos(@RequestParam Optional<Boolean> completed,
+                                                 @RequestParam Optional<Priority> priority,
+                                                 @RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "10") int size){
         User user = getAuthenticateUser();
-        if( completed.isPresent() && priority.isPresent()){
-            return todoRepository.findAllByUserAndCompletedAndPriority(user, completed.get(), priority.get());
+        Pageable pageable = PageRequest.of(page,size);
+        Page<Todo> todos;
+        if (completed.isPresent() && priority.isPresent()) {
+            todos = todoRepository.findAllByUserAndCompletedAndPriority(user, completed.get(), priority.get(), pageable);
         } else if (completed.isPresent()) {
-            return todoRepository.findAllByUserAndCompleted(user, completed.get());
+            todos = todoRepository.findAllByUserAndCompleted(user, completed.get(), pageable);
         } else if (priority.isPresent()) {
-            return todoRepository.findAllByUserAndPriority(user, priority.get());
+            todos = todoRepository.findAllByUserAndPriority(user, priority.get(), pageable);
         } else {
-            return todoRepository.findAllByUser(user);
+            todos = todoRepository.findAllByUser(user, pageable);
         }
+        return pagedResourcesAssembler.toModel(todos);
     }
 
     @GetMapping("/todos/{id}")
