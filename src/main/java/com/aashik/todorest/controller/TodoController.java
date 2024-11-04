@@ -29,7 +29,7 @@ public class TodoController {
 
     private User getAuthenticateUser(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.isAuthenticated()){
+        if (authentication == null || !authentication.isAuthenticated()){
             return null;
         }
         return (User) authentication.getPrincipal();
