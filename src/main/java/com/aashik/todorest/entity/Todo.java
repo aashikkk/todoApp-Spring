@@ -24,6 +24,9 @@ public class Todo {
     @Column
     private Priority priority;
 
+    @ManyToOne
+    private User user;
+
     public Todo(String task, boolean completed, Priority priority) {
         this.task = task;
         this.completed = completed;

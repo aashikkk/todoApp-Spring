@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column
@@ -21,4 +21,6 @@ public class User {
 
     @Column
     private String password;
+    
+
 }
