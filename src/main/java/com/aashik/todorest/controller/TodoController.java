@@ -7,11 +7,13 @@ import com.aashik.todorest.repository.TodoRepository;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 
@@ -22,16 +24,21 @@ public class TodoController {
     private final TodoRepository todoRepository;
 
 
+    // Sort using priority and completed
     @GetMapping("/todos")
-    public List<Todo> getTodos(@RequestParam Optional<Boolean> completed, @RequestParam Optional<Priority> priority){
+    public Page<Todo> getTodos(@RequestParam Optional<Boolean> completed,
+                               @RequestParam Optional<Priority> priority,
+                               @RequestParam int page,
+                               @RequestParam int size){
+        Pageable pageable = PageRequest.of(page,size);
         if( completed.isPresent() && priority.isPresent()){
-            return todoRepository.findAllByCompletedAndPriority(completed.get(), priority.get());
+            return todoRepository.findAllByCompletedAndPriority(completed.get(), priority.get(), pageable);
         } else if (completed.isPresent()) {
-            return todoRepository.findAllByCompleted(completed.get());
+            return todoRepository.findAllByCompleted(completed.get(), pageable);
         } else if (priority.isPresent()) {
-            return todoRepository.findAllByPriority(priority.get());
+            return todoRepository.findAllByPriority(priority.get(), pageable);
         } else {
-            return todoRepository.findAll();
+            return todoRepository.findAll(pageable);
         }
     }
 
