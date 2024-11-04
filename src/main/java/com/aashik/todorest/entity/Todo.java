@@ -25,11 +25,13 @@ public class Todo {
     private Priority priority;
 
     @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public Todo(String task, boolean completed, Priority priority) {
+    public Todo(String task, boolean completed, Priority priority, User user) {
         this.task = task;
         this.completed = completed;
         this.priority = priority;
+        this.user = user;
     }
 }
